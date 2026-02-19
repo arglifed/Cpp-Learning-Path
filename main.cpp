@@ -1,16 +1,17 @@
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <ctime>   // Header for timestamp logic
 
 int main() {
     std::string studentName;
     double score1, score2, average;
-    char choice = 'y'; // This will store if the user wants to continue
+    char choice = 'y';
 
-    // The 'while' loop keeps the program running as long as choice is 'y'
     while (choice == 'y' || choice == 'Y') {
 
         std::cout << "\nEnter student name: ";
-        std::cin.ignore(); // Clears the "Enter" key from previous runs
+        // We removed cin.ignore from here because it's now handled at the bottom
         std::getline(std::cin, studentName);
 
         std::cout << "Enter first test score: ";
@@ -35,9 +36,32 @@ int main() {
             std::cout << "Status: FAILED." << std::endl;
         }
 
-        // Ask the user if they want to go again
+        // --- LOGGING TO FILE WITH TIMESTAMP ---
+        std::ofstream logFile;
+        logFile.open("access_log.txt", std::ios_base::app);
+
+        if (logFile.is_open()) {
+            // Logic to get the current date and time
+            time_t now = time(0);
+            char dt[26];
+            ctime_s(dt, sizeof(dt), &now);
+
+            // Removing the hidden newline character ctime adds to the end of dt
+            std::string timeStr(dt);
+            if (!timeStr.empty() && timeStr.back() == '\n') timeStr.pop_back();
+
+            logFile << "[" << timeStr << "] Name: " << studentName << " | Grade: " << average << "%" << std::endl;
+            logFile.close();
+            std::cout << "(Result logged to access_log.txt)" << std::endl;
+        }
+
         std::cout << "\nWould you like to enter another student? (y/n): ";
         std::cin >> choice;
+
+        // --- THE BUFFER FIX ---
+        // This clears the 'Enter' key from the choice input 
+        // so it doesn't break the name input on the next loop.
+        std::cin.ignore(1000, '\n');
     }
 
     std::cout << "Goodbye!" << std::endl;
